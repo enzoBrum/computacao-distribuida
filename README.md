@@ -1,6 +1,7 @@
 # computacao-distribuida
 
-## Tema: Sistema distribuído de votações
+## Tema: 
+- Sistema distribuído de votações
 
 ## Padrões de projeto utilizados: 
 - microserviços
