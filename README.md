@@ -2,9 +2,13 @@
 
 ## Tema: Sistema distribuído de votações
 
-## Padrões de projeto utilizados: microserviços, identidade federada, replicação
+## Padrões de projeto utilizados: 
+- microserviços
+- identidade federada
+- replicação
 
-## Tecnologias distribuidas: A definir
+## Tecnologias distribuidas
+- A definir
 
 ## Funcionalidades
 ### Usuário Não Autenticado
