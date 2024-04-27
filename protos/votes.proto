@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+import "users.proto";
+
+
+service Polls {
+    // retorna todas as enquetes
+    rpc GetPolls(Empty) returns (GetPollsReply) {} 
+    
+    // cria uma enquete
+    rpc CreatePoll(PollRequest) returns (Poll) {}
+
+    // delete uma enquete
+    rpc DeletePoll(PollRequest) returns (Empty) {}
+    
+    // Vota em uma enquete.
+    rpc Vote(PollRequest) returns (Empty) {}
+    
+    // remove um voto de uma enquete.
+    rpc Unvote(PollRequest) returns (Empty) {}
+    
+    // retorna todas as enquetes nas quais um usuário votou
+    rpc GetPollsVotedByUser(User) returns (GetPollsReply) {}
+    
+    // retorna todas as enquetes criadas por um usuário.
+    rpc GetUserPolls(User) returns (GetPollsReply) {}
+}
+
+message Vote {
+    int32 poll_id = 1;
+    int32 option_id = 2;
+    int32 user_id = 3;
+}
+
+message PollOptions {
+    optional int32 id = 1;
+    int32 quantity = 2;
+    string text = 3;
+}
+
+message Poll {
+    optional int32 id = 1;
+    string title = 2;
+    string text = 3;
+    repeated PollOptions options = 4;
+}
+
+message GetPollsReply {
+    map<int32, Poll> polls = 1;
+}
+
+message PollRequest {
+    User user = 1;
+    Poll poll = 2;
+}
+

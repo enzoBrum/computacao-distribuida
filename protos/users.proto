@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+service Users {
+    
+    // cria um usuário
+    rpc Create(UserAuth) returns (Empty) {}
+    
+    // deleta um usuário
+    rpc Delete(UserAuth) returns (Empty) {}
+    
+    // autentica um usuário
+    rpc Auth(UserAuth) returns (AuthReply) {}
+    
+    // retorna informações relacionadas à um usuário
+    rpc GetInformation(InformationRequest) returns (InformationReply) {}
+}
+
+/* Um usuário do serviço */
+message User {
+    string name = 1;
+    string email = 2;
+    optional int32 id = 3;
+}
+
+message Credentials {
+    // autenticação convencional
+    optional string password = 1;
+    
+    // Identidade Federada.
+    optional string acess_token = 2;
+}
+
+message UserAuth {
+    User user = 1;
+    Credentials credentials = 2;
+}
+
+
+message AuthReply {
+    bool result = 1;
+}
+
+message InformationRequest {
+    UserAuth user_auth = 1;    
+    string information = 2;
+}
+
+message InformationReply {
+    optional string information = 1;
+}
+
+message Empty {
+
+}
