@@ -46,6 +46,7 @@ message Poll {
 }
 
 message GetPollsReply {
+    // mapeia um ID à uma Poll.
     map<int32, Poll> polls = 1;
 }
 

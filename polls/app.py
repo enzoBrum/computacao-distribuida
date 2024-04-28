@@ -1,15 +1,13 @@
-import os
+from flask import Flask
 
-from flask import Flask, request
 import grpc
 
-from users_pb2 import Credentials, User, UserAuth
-import users_pb2_grpc
+from users_pb2_grpc import UsersStub
+from users_pb2 import User
+
 
 app = Flask(__name__)
 
-USERS_URL = os.environ["USERS_URL"]
-POLLS_URL = os.environ["POLLS_URL"]
 
 
 @app.route("/")
@@ -17,37 +15,7 @@ def hello_world():
     return "Olá, mundo!"
 
 
-@app.route("/signin", methods=["POST"])
-def sign_in():
-    """
-    Rota de criação de usuário.
-    """
-
-    # TODO: identidade federada
-    # TODO: usar secure_channel
-
-    params = request.form.to_dict(flat=True)
-
-    name = params["name"]
-    email = params["email"]
-    password = params["password"]
-
-    with grpc.insecure_channel(USERS_URL) as channel:
-        stub = users_pb2_grpc.UsersStub(channel)
-
-        user = User(name=name, email=email)
-        cred = Credentials(password=password)
-
-        stub.Create(UserAuth(user=user, credentials=cred))
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
-
-
 """
-
-
 Rotas:
     - / --> index.html. Página inicial
     - /vote/create --> cria voto
@@ -55,7 +23,14 @@ Rotas:
     - /signin
     - /login
     - /logout
+"""
 
+
+if __name__ ==  "__main__":
+    app.run(debug=True, host="0.0.0.0")
+
+
+"""
 create table usuario (
     id_usuario serial primary key,
     nome varchar(50) not null,
