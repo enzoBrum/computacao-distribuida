@@ -4,7 +4,10 @@ RUN mkdir /app
 COPY requirements.txt app/
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY --from=protos *.py app/
+COPY --from=protos . /protos
+
+ENV PYTHONPATH "${PYTHONPATH}:/protos"
+ENV PYTHONDONTWRITEBYTECODE 1
 
 COPY . app/
 

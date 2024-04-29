@@ -38,4 +38,4 @@
 - users: criar, remover, alterar usuários. Além do login.
 
 #### Rodando os microserviços
-- docker compose
+- ./run.sh

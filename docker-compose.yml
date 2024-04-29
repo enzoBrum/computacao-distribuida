@@ -9,29 +9,44 @@ services:
     environment:
       FLASK_RUN_PORT: 5000
       FLASK_DEBUG: "True"
-      USERS_URL: http://users:5000
-      POLLS_URL: http://polls:5000
+      USERS_URL: users:5000
+      POLLS_URL: polls:5000
+
+    volumes:
+      - type: bind
+        source: ./front-end
+        target: /app
 
   polls:
     build: 
       context: ./polls
       additional_contexts:
         protos: ./protos
+    command: watchmedo auto-restart --recursive --pattern="*.py" --directory="/app" python -- -m app
     environment:
-      USERS_URL: http://users:5000
+      USERS_URL: users:5000
       DB_USER: user
       DB_PASSWORD: 1234
       PORT: 5000
+    volumes:
+      - type: bind
+        source: ./polls
+        target: /app
 
   users:
     build: 
       context: ./users
       additional_contexts:
         protos: ./protos
+    command: watchmedo auto-restart --recursive --pattern="*.py" --directory="/app" python -- -m app
     environment:
       DB_USER: user
       DB_PASSWORD: 1234
       PORT: 5000
+    volumes:
+      - type: bind
+        source: ./users
+        target: /app
 
   postgres:
     image: bitnami/postgresql:16

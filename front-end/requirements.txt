@@ -8,3 +8,4 @@ MarkupSafe==2.1.5
 Werkzeug==3.0.2
 wheel==0.42.0
 protobuf==5.26.1
+watchdog[watchmedo]==4.0.0

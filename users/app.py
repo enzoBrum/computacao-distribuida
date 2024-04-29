@@ -10,7 +10,7 @@ import users_pb2_grpc
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
-PORT = os.environ["PORT"]
+PORT = os.getenv("PORT")
 
 
 class UserServicer(users_pb2_grpc.UsersServicer):
@@ -27,11 +27,19 @@ class UserServicer(users_pb2_grpc.UsersServicer):
 
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    users_pb2_grpc.add_UsersServicer_to_server(UserServicer, server)
+    users_pb2_grpc.add_UsersServicer_to_server(UserServicer(), server)
 
     server.add_insecure_port(f"[::]:{PORT}")
     server.start()
 
-    logging.debug("Servidor rodando na porta %s", PORT)
-    server.wait_for_termination()
+    logging.info("Servidor rodando na porta %s", PORT)
 
+    try:
+        server.wait_for_termination()
+    except KeyboardInterrupt:
+        logging.info("Execuçao encerrada")
+        exit(0)
+
+
+if __name__ == "__main__":
+    main()
