@@ -2,13 +2,15 @@ syntax = "proto3";
 
 service Users {
     
-    // cria um usuário
+    /*
+    Cria um usuário e armazena suas credenciais na base de dados.
+    */
     rpc Create(UserAuth) returns (Empty) {}
     
-    // deleta um usuário
+    // Delete um usuário, o removendo da base de dados. Além disso, deve remover todos os seus votos.
     rpc Delete(UserAuth) returns (Empty) {}
     
-    // autentica um usuário
+    // autentica um usuário. I.e: fala se há um usuário com email e senha iguais aos recebidos.
     rpc Auth(UserAuth) returns (AuthReply) {}
     
     // retorna informações relacionadas à um usuário

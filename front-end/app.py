@@ -6,6 +6,7 @@ import grpc
 from users_pb2 import Credentials, User, UserAuth
 import users_pb2_grpc
 
+
 app = Flask(__name__)
 
 USERS_URL = os.environ["USERS_URL"]
@@ -39,6 +40,8 @@ def sign_in():
         cred = Credentials(password=password)
 
         stub.Create(UserAuth(user=user, credentials=cred))
+
+    return "", 200
 
 
 if __name__ == "__main__":

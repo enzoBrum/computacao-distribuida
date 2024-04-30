@@ -4,8 +4,10 @@ import os
 import sys
 
 import grpc
+from sqlalchemy.orm import Session
 
-from users_pb2 import Empty
+from config import DbUser, engine, init_db
+import users_pb2
 import users_pb2_grpc
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -18,11 +20,24 @@ class UserServicer(users_pb2_grpc.UsersServicer):
     Prove métodos que implementam as funcionalidades do serviço de usuários
     """
 
-    def Create(self, request, context) -> Empty:
-        logging.debug(type(request))
-        logging.debug(type(context))
+    def Create(self, request: users_pb2.UserAuth, context) -> users_pb2.Empty:
 
-        return Empty()
+        # TODO: lidar com emails repetidos.
+
+        logging.info("Adicionando usuário %s na base de dados...", request.user.name)
+
+        user = DbUser(
+            id=None,
+            name=request.user.name,
+            email=request.user.email,
+            password=request.credentials.password,
+        )
+
+        with Session(engine()) as session:
+            session.add(user)
+            session.commit()
+
+        return users_pb2.Empty()
 
 
 def main():
@@ -42,4 +57,5 @@ def main():
 
 
 if __name__ == "__main__":
+    init_db()
     main()

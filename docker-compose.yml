@@ -1,6 +1,6 @@
 services:
   front-end:
-    build: 
+    build:
       context: ./front-end
       additional_contexts:
         protos: ./protos
@@ -18,7 +18,7 @@ services:
         target: /app
 
   polls:
-    build: 
+    build:
       context: ./polls
       additional_contexts:
         protos: ./protos
@@ -27,6 +27,8 @@ services:
       USERS_URL: users:5000
       DB_USER: user
       DB_PASSWORD: 1234
+      DB_URL: postgres
+      DB_DATABASE: database
       PORT: 5000
     volumes:
       - type: bind
@@ -34,7 +36,7 @@ services:
         target: /app
 
   users:
-    build: 
+    build:
       context: ./users
       additional_contexts:
         protos: ./protos
@@ -42,6 +44,9 @@ services:
     environment:
       DB_USER: user
       DB_PASSWORD: 1234
+      DB_URL: postgres
+      DB_DATABASE: database
+
       PORT: 5000
     volumes:
       - type: bind
@@ -53,3 +58,4 @@ services:
     environment:
       POSTGRESQL_USERNAME: user
       POSTGRESQL_PASSWORD: 1234
+      POSTGRESQL_DATABASE: database

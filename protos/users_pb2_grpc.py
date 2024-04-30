@@ -40,21 +40,22 @@ class UsersServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Create(self, request, context):
-        """cria um usuário
+        """
+        Cria um usuário e armazena suas credenciais na base de dados.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Delete(self, request, context):
-        """deleta um usuário
+        """Delete um usuário, o removendo da base de dados. Além disso, deve remover todos os seus votos.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Auth(self, request, context):
-        """autentica um usuário
+        """autentica um usuário. I.e: fala se há um usuário com email e senha iguais aos recebidos.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

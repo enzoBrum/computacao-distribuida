@@ -1,5 +1,3 @@
 {
-        "python.analysis.extraPaths": [
-                "./protos"
-        ]
+  "python.analysis.extraPaths": ["./protos"]
 }
