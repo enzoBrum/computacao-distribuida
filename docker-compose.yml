@@ -1,9 +1,6 @@
 services:
   front-end:
-    build:
-      context: ./front-end
-      additional_contexts:
-        protos: ./protos
+    build: ./front-end
     ports:
       - 80:5000
     environment:
@@ -16,12 +13,12 @@ services:
       - type: bind
         source: ./front-end
         target: /app
+      - type: bind
+        source: ./protos
+        target: /protos
 
   polls:
-    build:
-      context: ./polls
-      additional_contexts:
-        protos: ./protos
+    build: ./polls
     command: watchmedo auto-restart --recursive --pattern="*.py" --directory="/app" python -- -m app
     environment:
       USERS_URL: users:5000
@@ -34,12 +31,12 @@ services:
       - type: bind
         source: ./polls
         target: /app
+      - type: bind
+        source: ./protos
+        target: /protos
 
   users:
-    build:
-      context: ./users
-      additional_contexts:
-        protos: ./protos
+    build: ./users
     command: watchmedo auto-restart --recursive --pattern="*.py" --directory="/app" python -- -m app
     environment:
       DB_USER: user
@@ -52,6 +49,9 @@ services:
       - type: bind
         source: ./users
         target: /app
+      - type: bind
+        source: ./protos
+        target: /protos
 
   postgres:
     image: bitnami/postgresql:16
