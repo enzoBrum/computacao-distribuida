@@ -9,6 +9,10 @@ Veja o .proto para mais detalhes de cada rota.
 OBS: à menos que você muda alguma das dependências em requirements.txt, não é necessário reiniciar os containers quando alguma mudança nos arquivos é realizada. Basta salvar o arquivo que
 o serviço reinicia sozinho
 
+### Compose
+
+- [ ] achar uma forma de não ter que usar voluma pra montar o /protos
+
 ### Users
 
 Por enquanto, não há necessidade de implementar identidade federada e hashing na senha do usuário.
