@@ -34,11 +34,32 @@ class UserServicer(users_pb2_grpc.UsersServicer):
         )
 
         with Session(engine()) as session:
+            existing_user = session.query(DbUser).filter(DbUser.email == request.user.email).first()
+            if existing_user:
+                logging.info("Email já cadastrado.")
+                return users_pb2.Empty()
+            
             session.add(user)
             session.commit()
 
         return users_pb2.Empty()
 
+    def Delete(self, request: users_pb2.UserAuth, context) -> users_pb2.Empty:
+
+        logging.info("Removendo usuário da base de dados...")
+
+        with Session(engine()) as session:
+            user = session.query(DbUser).filter(DbUser.email == request.user.email).first()
+            if not user:
+                logging.info("Usuário não encontrado.")
+                return users_pb2.Empty()
+            
+            session.delete(user)
+            session.commit()
+
+            logging.info(f"Usuário {user} removido com sucesso.")
+
+        return users_pb2.Empty()
 
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

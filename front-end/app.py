@@ -43,6 +43,25 @@ def sign_in():
 
     return "", 200
 
+@app.route("/delete", methods=["POST"])
+def delete():
+    """
+    Rota de para deleção de usuário.
+    """
+
+    params = request.form.to_dict(flat=True)
+
+    email = params["email"]
+
+    with grpc.insecure_channel(USERS_URL) as channel:
+        stub = users_pb2_grpc.UsersStub(channel)
+
+        user = User(email=email)
+
+        stub.Delete(UserAuth(user=user))
+
+    return "", 200
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
