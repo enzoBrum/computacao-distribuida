@@ -8,13 +8,13 @@ service Users {
     rpc Create(UserAuth) returns (Empty) {}
     
     // Delete um usuário, o removendo da base de dados. Além disso, deve remover todos os seus votos.
-    rpc Delete(UserAuth) returns (Empty) {}
+    rpc Delete(Credentials) returns (Empty) {}
     
     // autentica um usuário. I.e: fala se há um usuário com email e senha iguais aos recebidos.
-    rpc Auth(UserAuth) returns (AuthReply) {}
-    
-    // retorna informações relacionadas à um usuário
-    rpc GetInformation(InformationRequest) returns (InformationReply) {}
+    rpc Auth(Credentials) returns (User) {}
+
+    // recebe email e senha, retorna access token
+    rpc GetToken(UsernamePassword) returns (AccessToken) {}
 }
 
 /* Um usuário do serviço */
@@ -24,12 +24,21 @@ message User {
     optional int32 id = 3;
 }
 
+message UsernamePassword {
+    string username = 1;
+    string password = 2;
+}
+
+message AccessToken {
+    string access_token = 1;
+}
+
 message Credentials {
     // autenticação convencional
-    optional string password = 1;
+    optional UsernamePassword username_password = 1;
     
-    // Identidade Federada.
-    optional string acess_token = 2;
+    // token
+    optional AccessToken access_token = 2;
 }
 
 message UserAuth {
@@ -37,18 +46,8 @@ message UserAuth {
     Credentials credentials = 2;
 }
 
-
 message AuthReply {
-    bool result = 1;
-}
-
-message InformationRequest {
-    UserAuth user_auth = 1;    
-    string information = 2;
-}
-
-message InformationReply {
-    optional string information = 1;
+    optional string access_token = 1;
 }
 
 message Empty {

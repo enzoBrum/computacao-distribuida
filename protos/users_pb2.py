@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0busers.proto\";\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x0f\n\x02id\x18\x03 \x01(\x05H\x00\x88\x01\x01\x42\x05\n\x03_id\"[\n\x0b\x43redentials\x12\x15\n\x08password\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0b\x61\x63\x65ss_token\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\x0b\n\t_passwordB\x0e\n\x0c_acess_token\"B\n\x08UserAuth\x12\x13\n\x04user\x18\x01 \x01(\x0b\x32\x05.User\x12!\n\x0b\x63redentials\x18\x02 \x01(\x0b\x32\x0c.Credentials\"\x1b\n\tAuthReply\x12\x0e\n\x06result\x18\x01 \x01(\x08\"G\n\x12InformationRequest\x12\x1c\n\tuser_auth\x18\x01 \x01(\x0b\x32\t.UserAuth\x12\x13\n\x0binformation\x18\x02 \x01(\t\"<\n\x10InformationReply\x12\x18\n\x0binformation\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\x0e\n\x0c_information\"\x07\n\x05\x45mpty2\xa2\x01\n\x05Users\x12\x1d\n\x06\x43reate\x12\t.UserAuth\x1a\x06.Empty\"\x00\x12\x1d\n\x06\x44\x65lete\x12\t.UserAuth\x1a\x06.Empty\"\x00\x12\x1f\n\x04\x41uth\x12\t.UserAuth\x1a\n.AuthReply\"\x00\x12:\n\x0eGetInformation\x12\x13.InformationRequest\x1a\x11.InformationReply\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0busers.proto\";\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x0f\n\x02id\x18\x03 \x01(\x05H\x00\x88\x01\x01\x42\x05\n\x03_id\"6\n\x10UsernamePassword\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"#\n\x0b\x41\x63\x63\x65ssToken\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\"\x90\x01\n\x0b\x43redentials\x12\x31\n\x11username_password\x18\x01 \x01(\x0b\x32\x11.UsernamePasswordH\x00\x88\x01\x01\x12\'\n\x0c\x61\x63\x63\x65ss_token\x18\x02 \x01(\x0b\x32\x0c.AccessTokenH\x01\x88\x01\x01\x42\x14\n\x12_username_passwordB\x0f\n\r_access_token\"B\n\x08UserAuth\x12\x13\n\x04user\x18\x01 \x01(\x0b\x32\x05.User\x12!\n\x0b\x63redentials\x18\x02 \x01(\x0b\x32\x0c.Credentials\"7\n\tAuthReply\x12\x19\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\x0f\n\r_access_token\"\x07\n\x05\x45mpty2\x96\x01\n\x05Users\x12\x1d\n\x06\x43reate\x12\t.UserAuth\x1a\x06.Empty\"\x00\x12 \n\x06\x44\x65lete\x12\x0c.Credentials\x1a\x06.Empty\"\x00\x12\x1d\n\x04\x41uth\x12\x0c.Credentials\x1a\x05.User\"\x00\x12-\n\x08GetToken\x12\x11.UsernamePassword\x1a\x0c.AccessToken\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,18 +23,18 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _globals['_USER']._serialized_start=15
   _globals['_USER']._serialized_end=74
-  _globals['_CREDENTIALS']._serialized_start=76
-  _globals['_CREDENTIALS']._serialized_end=167
-  _globals['_USERAUTH']._serialized_start=169
-  _globals['_USERAUTH']._serialized_end=235
-  _globals['_AUTHREPLY']._serialized_start=237
-  _globals['_AUTHREPLY']._serialized_end=264
-  _globals['_INFORMATIONREQUEST']._serialized_start=266
-  _globals['_INFORMATIONREQUEST']._serialized_end=337
-  _globals['_INFORMATIONREPLY']._serialized_start=339
-  _globals['_INFORMATIONREPLY']._serialized_end=399
-  _globals['_EMPTY']._serialized_start=401
-  _globals['_EMPTY']._serialized_end=408
-  _globals['_USERS']._serialized_start=411
-  _globals['_USERS']._serialized_end=573
+  _globals['_USERNAMEPASSWORD']._serialized_start=76
+  _globals['_USERNAMEPASSWORD']._serialized_end=130
+  _globals['_ACCESSTOKEN']._serialized_start=132
+  _globals['_ACCESSTOKEN']._serialized_end=167
+  _globals['_CREDENTIALS']._serialized_start=170
+  _globals['_CREDENTIALS']._serialized_end=314
+  _globals['_USERAUTH']._serialized_start=316
+  _globals['_USERAUTH']._serialized_end=382
+  _globals['_AUTHREPLY']._serialized_start=384
+  _globals['_AUTHREPLY']._serialized_end=439
+  _globals['_EMPTY']._serialized_start=441
+  _globals['_EMPTY']._serialized_end=448
+  _globals['_USERS']._serialized_start=451
+  _globals['_USERS']._serialized_end=601
 # @@protoc_insertion_point(module_scope)

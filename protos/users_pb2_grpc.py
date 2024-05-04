@@ -21,18 +21,18 @@ class UsersStub(object):
                 )
         self.Delete = channel.unary_unary(
                 '/Users/Delete',
-                request_serializer=users__pb2.UserAuth.SerializeToString,
+                request_serializer=users__pb2.Credentials.SerializeToString,
                 response_deserializer=users__pb2.Empty.FromString,
                 )
         self.Auth = channel.unary_unary(
                 '/Users/Auth',
-                request_serializer=users__pb2.UserAuth.SerializeToString,
-                response_deserializer=users__pb2.AuthReply.FromString,
+                request_serializer=users__pb2.Credentials.SerializeToString,
+                response_deserializer=users__pb2.User.FromString,
                 )
-        self.GetInformation = channel.unary_unary(
-                '/Users/GetInformation',
-                request_serializer=users__pb2.InformationRequest.SerializeToString,
-                response_deserializer=users__pb2.InformationReply.FromString,
+        self.GetToken = channel.unary_unary(
+                '/Users/GetToken',
+                request_serializer=users__pb2.UsernamePassword.SerializeToString,
+                response_deserializer=users__pb2.AccessToken.FromString,
                 )
 
 
@@ -61,8 +61,8 @@ class UsersServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetInformation(self, request, context):
-        """retorna informações relacionadas à um usuário
+    def GetToken(self, request, context):
+        """recebe email e senha, retorna access token
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -78,18 +78,18 @@ def add_UsersServicer_to_server(servicer, server):
             ),
             'Delete': grpc.unary_unary_rpc_method_handler(
                     servicer.Delete,
-                    request_deserializer=users__pb2.UserAuth.FromString,
+                    request_deserializer=users__pb2.Credentials.FromString,
                     response_serializer=users__pb2.Empty.SerializeToString,
             ),
             'Auth': grpc.unary_unary_rpc_method_handler(
                     servicer.Auth,
-                    request_deserializer=users__pb2.UserAuth.FromString,
-                    response_serializer=users__pb2.AuthReply.SerializeToString,
+                    request_deserializer=users__pb2.Credentials.FromString,
+                    response_serializer=users__pb2.User.SerializeToString,
             ),
-            'GetInformation': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetInformation,
-                    request_deserializer=users__pb2.InformationRequest.FromString,
-                    response_serializer=users__pb2.InformationReply.SerializeToString,
+            'GetToken': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetToken,
+                    request_deserializer=users__pb2.UsernamePassword.FromString,
+                    response_serializer=users__pb2.AccessToken.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -130,7 +130,7 @@ class Users(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Users/Delete',
-            users__pb2.UserAuth.SerializeToString,
+            users__pb2.Credentials.SerializeToString,
             users__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -147,13 +147,13 @@ class Users(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Users/Auth',
-            users__pb2.UserAuth.SerializeToString,
-            users__pb2.AuthReply.FromString,
+            users__pb2.Credentials.SerializeToString,
+            users__pb2.User.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetInformation(request,
+    def GetToken(request,
             target,
             options=(),
             channel_credentials=None,
@@ -163,8 +163,8 @@ class Users(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Users/GetInformation',
-            users__pb2.InformationRequest.SerializeToString,
-            users__pb2.InformationReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Users/GetToken',
+            users__pb2.UsernamePassword.SerializeToString,
+            users__pb2.AccessToken.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

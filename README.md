@@ -48,10 +48,16 @@ Para testar a API, basta usar um comando semelhante à
 ```bash
 
 # Pega todas as enquetes
-curl localhost:80/poll/all
+curl localhost:5000/poll/all
 
 # Cria um usuário.
-curl localhost:80/login -F name="Foo Bar" -F email=foo.bar@example.com -F password=1234
+curl localhost:5000/login -F name="Foo Bar" -F email=foo.bar@example.com -F password=1234
+
+# pega o token de acesso
+curl localhost:5000/signin -F name="Foo Bar" -F email=foo.bar@example.com -F password=1234
+
+# usa o token de acesso. (Ainda n ta funcionando o delete)
+curl localhost:5000/delete -H "Authorization: Bearer $token_do_curl_acima" -X DELETE
 ```
 
 Eu implementei parte da criação de conta. Então da pra se basear naquilo quando for implementar a API e a comunicação com RPC.

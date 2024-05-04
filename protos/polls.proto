@@ -14,10 +14,10 @@ service Polls {
     rpc DeletePoll(PollRequest) returns (Empty) {}
     
     // Vota em uma enquete.
-    rpc Vote(PollRequest) returns (Empty) {}
+    rpc Vote(Vote) returns (Empty) {}
     
     // remove um voto de uma enquete.
-    rpc Unvote(PollRequest) returns (Empty) {}
+    rpc Unvote(Vote) returns (Empty) {}
     
     // retorna todas as enquetes nas quais um usuário votou
     rpc GetPollsVotedByUser(User) returns (GetPollsReply) {}
@@ -27,15 +27,13 @@ service Polls {
 }
 
 message Vote {
-    int32 poll_id = 1;
-    int32 option_id = 2;
-    int32 user_id = 3;
+    int32 id_user = 1;
+    int32 id_option = 2;
 }
 
 message PollOptions {
     optional int32 id = 1;
-    int32 quantity = 2;
-    string text = 3;
+    string text = 2;
 }
 
 message Poll {
@@ -47,7 +45,7 @@ message Poll {
 
 message GetPollsReply {
     // mapeia um ID à uma Poll.
-    map<int32, Poll> polls = 1;
+    repeated Poll polls = 1;
 }
 
 message PollRequest {
