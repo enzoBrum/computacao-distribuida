@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from flask import Flask, request
+from flask import Flask, request, render_template, redirect, session
 import grpc
 
 from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword
@@ -26,12 +26,13 @@ USERS_URL = os.environ["USERS_URL"]
 POLLS_URL = os.environ["POLLS_URL"]
 
 
-@app.route("/")
-def hello_world():
-    return "Olá, mundo!"
+@app.route('/')
+@app.route('/index')
+def index():
+    return render_template('index.html')
 
 
-@app.route("/signup", methods=["POST"])
+@app.route("/signup", methods=["GET", "POST"])
 def sign_up():
     """
     Rota de criação de usuário.
@@ -40,11 +41,12 @@ def sign_up():
     # TODO: identidade federada
     # TODO: usar secure_channel
 
-    params = request.form.to_dict(flat=True)
+    name = request.form.get("name")
+    email = request.form.get("email")
+    password = request.form.get("password")
 
-    name = params["name"]
-    email = params["email"]
-    password = params["password"]
+    if not name or not email or not password:
+        return render_template("signup.html")
 
     with grpc.insecure_channel(USERS_URL) as channel:
         stub = users_pb2_grpc.UsersStub(channel)
@@ -54,14 +56,14 @@ def sign_up():
 
         try:
             stub.Create(UserAuth(user=user, credentials=cred))
-            return "", 200
+            return redirect("/index"), 200
         except grpc.RpcError as err:
             logger.error("Erro durante a criação da conta: %s", err)
             status: status_pb2.Status = rpc_status.from_call(err)
 
             if status.code == code_pb2.ALREADY_EXISTS:
                 return f"Usuário com email {email} já existe!", 400
-            return "", 500
+            return render_template("signup.html"), 500
 
 @app.route("/delete", methods=["DELETE"])
 def delete():
@@ -85,40 +87,50 @@ def delete():
 
     return "", 200
 
-@app.route("/signin", methods=["POST"])
-def sign_in():
-    params = request.form.to_dict(flat=True)
+@app.route("/login", methods=["GET", "POST"])
+def log_in():
+    name = request.form.get("name")
+    password = request.form.get("password")
+
+    if not name or not password:
+        return render_template("login.html")
 
     with grpc.insecure_channel(USERS_URL) as channel:
         stub = users_pb2_grpc.UsersStub(channel)
         try:
-            token: AccessToken = stub.GetToken(UsernamePassword(username=params["email"], password=params["password"]))
-            return token.access_token, 200
+            token: AccessToken = stub.GetToken(UsernamePassword(username=name, password=password))
+            session["token"] = token.access_token
+            return redirect("/index"), 200
         except grpc.RpcError as err:
             logger.error("Erro durante a obtenção do token", exc_info=True)
             status = rpc_status.from_call(err)
 
             if status.code == code_pb2.UNAUTHENTICATED:
-                return "", 401
+                return render_template("login.html"), 401
 
-            return "", 500
+            return render_template("login.html"), 500
 
-@app.route("/poll/create", methods=["POST"])
+@app.route("/poll/create", methods=["GET", "POST"])
 def create_poll():
     """
     Rota de criação de enquete.
     """
 
-    token = request.headers["Authorization"][6:]
+    if "user_token" in session:
+        token = session["user_token"]
+    else:
+        return redirect("/login")
 
-    with grpc.insecure_channel(USERS_URL) as channel:
+    """with grpc.insecure_channel(USERS_URL) as channel:
         stub = users_pb2_grpc.UsersStub(channel)
-        user = stub.Authenticate(Credentials(token=token))
+        user = stub.Authenticate(Credentials(token=token))"""
 
-    parameters = request.form.to_dict(flat=True)
 
-    title = parameters["title"]
-    text = parameters["text"]
+    title = request.form.get("title")
+    text = request.form.get("options")
+
+    if not title or not text:
+        return render_template("createpoll.html")
 
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = users_pb2_grpc.PollsStub(channel)

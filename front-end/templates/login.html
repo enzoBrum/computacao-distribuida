@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form">
+    <h1 class="form-title">Log in</h1>
+    <form action="/login" method="post">
+        <label for="name">Username:</label>
+        <input class="form-element" type="name" name="name" id="name" required>
+        <label for="password">Password:</label>
+        <input class="form-element" type="password" name="password" id="password" required>
+        <input class="submit-button" type="submit" value="Submit">
+    </form>
+    <a><img class="google-icon" src="{{ url_for('static', filename='googleicon.png') }}" alt="Google Icon"></a>
+</div>
+{% endblock %}

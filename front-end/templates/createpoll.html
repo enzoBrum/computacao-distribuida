@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form">
+    <form action="/poll/create" method="post">
+        <label for="title">Title:</label>
+        <input class="form-element" type="text" name="title" id="title" required>
+
+        <label for="options">Options:</label>
+        <input class="form-element" type="text" name="options" id="options" required>
+
+        <text class="instructions">Split the options by ";"</text>
+        <input class="submit-button" type="submit" value="Submit">
+</form>
+{% endblock %}
