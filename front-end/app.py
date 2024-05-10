@@ -271,13 +271,9 @@ def delete_poll(id: int):
 
     token = request.headers["Authorization"][6:]
 
-    with grpc.insecure_channel(USERS_URL) as channel:
-        stub = users_pb2_grpc.UsersStub(channel)
-        user = stub.Authenticate(Credentials(token=token))
-
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = users_pb2_grpc.PollsStub(channel)
-        stub.DeletePoll(PollRequest(poll=Poll(id=id), user=user))
+        stub.DeletePoll(PollRequest(poll=Poll(id=id), user=g.user))
 
     return "", 200
 
@@ -303,15 +299,9 @@ def vote(id: int):
     Rota para votar em uma enquete.
     """
 
-    token = request.headers["Authorization"][6:]
-
-    with grpc.insecure_channel(USERS_URL) as channel:
-        stub = users_pb2_grpc.UsersStub(channel)
-        user = stub.Authenticate(Credentials(token=token))
-
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = users_pb2_grpc.PollsStub(channel)
-        stub.Vote(VoteInfo(id_user=user.id, id_option=id))
+        stub.Vote(VoteInfo(id_user=g.user.id, id_option=id))
 
     return "", 200
 
