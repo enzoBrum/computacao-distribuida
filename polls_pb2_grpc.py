@@ -50,6 +50,11 @@ class PollsStub(object):
                 request_serializer=users__pb2.User.SerializeToString,
                 response_deserializer=polls__pb2.GetPollsReply.FromString,
                 )
+        self.GetPollID = channel.unary_unary(
+                '/Polls/GetPollID',
+                request_serializer=polls__pb2.Poll.SerializeToString,
+                response_deserializer=polls__pb2.Poll.FromString,
+                )
 
 
 class PollsServicer(object):
@@ -103,6 +108,13 @@ class PollsServicer(object):
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
+    
+    def GetPollID(self, request, context):
+        """retorna uma enquete pelo id
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
 
 def add_PollsServicer_to_server(servicer, server):
@@ -141,6 +153,11 @@ def add_PollsServicer_to_server(servicer, server):
                     servicer.GetUserPolls,
                     request_deserializer=users__pb2.User.FromString,
                     response_serializer=polls__pb2.GetPollsReply.SerializeToString,
+            ),
+            'GetPollID': grpc.unary_unary_rpc_method_handler(
+                        servicer.GetPollID,
+                        request_deserializer=polls__pb2.Poll.FromString,
+                        response_serializer=polls__pb2.Poll.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -268,5 +285,22 @@ class Polls(object):
         return grpc.experimental.unary_unary(request, target, '/Polls/GetUserPolls',
             users__pb2.User.SerializeToString,
             polls__pb2.GetPollsReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetPollID(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Polls/GetPollID',
+            polls__pb2.Poll.SerializeToString,
+            polls__pb2.Poll.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

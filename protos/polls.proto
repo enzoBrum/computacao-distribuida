@@ -24,6 +24,9 @@ service Polls {
     
     // retorna todas as enquetes criadas por um usuário.
     rpc GetUserPolls(User) returns (GetPollsReply) {}
+
+    // retorna o poll com id especifico.
+    rpc GetPollID(Poll) returns (Poll) {}
 }
 
 message VoteInfo {
