@@ -12,10 +12,9 @@ from google.rpc import code_pb2, status_pb2
 import grpc
 from grpc_status import rpc_status
 
-from polls_pb2 import Poll, PollOptions, PollRequest, VoteInfo
-import polls_pb2
+from polls_pb2 import Poll, PollOptions, PollRequest, VoteInfo, GetPollsReply
 import polls_pb2_grpc
-from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword
+from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword, Empty
 import users_pb2_grpc
 
 logging.basicConfig()
@@ -83,13 +82,18 @@ def authenticate(func):
 @app.route("/")
 @app.route("/index")
 def index():
+    with grpc.insecure_channel(POLLS_URL) as channel:
+        stub = polls_pb2_grpc.PollsStub(channel)
+
+        polls : GetPollsReply = stub.GetPolls(Empty())
+
     if session.get("token") is not None:
         token = session["token"]
         logger.debug(token)
         username = get_info_from_token(token, "sub")
-        return render_template("index.html", username=username)
+        return render_template("index.html", username=username, polls=polls.polls)
     else:
-        return render_template("index.html")
+        return render_template("index.html", polls=polls.polls)
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -239,16 +243,21 @@ def create_poll():
     Rota de criação de enquete.
     """
 
+    token = session["token"]
+    logger.debug(token)
+    username = get_info_from_token(token, "sub")
+
     title = request.form.get("title")
     text = request.form.get("content")
     options = request.form.get("options")
 
     if not title or not text or not options:
-        return render_template("createpoll.html")
+        return render_template("createpoll.html", username=username)
 
     options = options.split(";")
 
-    logging.debug(f"Criando enquete. {title=}, {text=}, {options=}")
+    logger.info(f"Criando enquete. {title=}, {text=}, {options=}")
+    logger.info(f"g.user: {g.user}")
 
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = polls_pb2_grpc.PollsStub(channel)
@@ -292,18 +301,35 @@ def get_user_polls(id: int):
     return polls, 200
 
 
-@app.route("/poll/vote/<int:id>", methods=["POST"])
+@app.route("/poll/vote/<int:id>", methods=["GET","POST"])
 @authenticate
 def vote(id: int):
     """
     Rota para votar em uma enquete.
     """
 
-    with grpc.insecure_channel(POLLS_URL) as channel:
-        stub = users_pb2_grpc.PollsStub(channel)
-        stub.Vote(VoteInfo(id_user=g.user.id, id_option=id))
+    token = session["token"]
+    logger.debug(token)
+    username = get_info_from_token(token, "sub")
 
-    return "", 200
+    id_options_marked = []
+
+    with grpc.insecure_channel(POLLS_URL) as channel:
+        stub = polls_pb2_grpc.PollsStub(channel)
+
+        poll : Poll = stub.GetPollID(Poll(id=id))
+        
+        for option in poll.options:
+            if request.form.get(str(option.id)) is not None:
+                id_options_marked.append(option.id)
+        
+        if len(id_options_marked) == 0:
+            return render_template("vote.html", username=username, poll=poll)
+                                   
+        for id_option in id_options_marked:
+            stub.Vote(VoteInfo(id_user=g.user.id, id_option=id_option))
+
+    return redirect("/index")
 
 
 if __name__ == "__main__":

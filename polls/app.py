@@ -9,7 +9,7 @@ from grpc import ServicerContext
 from config import connect_to_database
 import polls_pb2
 import polls_pb2_grpc
-from users_pb2 import User
+from users_pb2 import User, Empty
 from users_pb2_grpc import UsersStub
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -39,6 +39,8 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
                 [(opt.text, id_poll) for opt in request.poll.options],
             )
 
+        return Empty()
+
     def DeletePoll(self, request: polls_pb2.PollRequest, context: ServicerContext):
         logging.info("Deletando enquete...")
 
@@ -49,31 +51,21 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             """
             cursor.execute(delete_poll, (request.id, request.user.id))
 
-    def GetPolls(self, request: polls_pb2.PollRequest, context: ServicerContext):
+    def GetPolls(self, request: Empty, context: ServicerContext):
         logging.info("Listando todas as enquetes...")
 
         with connect_to_database() as cursor:
-            query = "SELECT * FROM polls"
-            cursor.execute(query)
-            poll_list = cursor.fetchall()
-            for i in poll_list:
-                logging.info(i)  # ?
-
-    def GetUserPolls(self, request: User, context: ServicerContext):
-        logging.info("Listando todas as enquetes criadas pelo usuário...")
-
-        with connect_to_database() as cursor:
             select_polls = """
-            SELECT id_poll, text, tittle
-            FROM polls 
-            WHERE polls.id_creator = %s"""
+            SELECT id_poll, title, text
+            FROM polls
+            """
 
-            result = cursor.execute(select_polls, (request.id,))
-            poll_list = result.fetchall()
+            cursor.execute(select_polls)
+            poll_list = cursor.fetchall()
 
             select_options = """ 
             SELECT id_option, text
-            FROM options
+            FROM option
             WHERE id_poll = %s
             """
 
@@ -81,12 +73,68 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
 
             ids = [poll[0] for poll in poll_list]
             for id in ids:
-                result = cursor.execute(select_options, (id,))
-                options[id] = result.fetchall()
+                cursor.execute(select_options, (id,))
+                options[id] = cursor.fetchall()
 
             returned_polls = [
                 polls_pb2.Poll(
-                    poll[0], poll[1], poll[2], polls_pb2.PollOptions(options[poll[0]])
+                    id=poll[0], 
+                    title=poll[1], 
+                    text=poll[2], 
+                    options=[
+                        polls_pb2.PollOptions(
+                            id=options[poll[0]][i][0], 
+                            text=options[poll[0]][i][1]
+                        ) 
+                        for i in range(len(options[poll[0]]))
+                    ]
+                )
+                for poll in poll_list
+            ]
+
+        return polls_pb2.GetPollsReply(polls=returned_polls)
+
+    def GetUserPolls(self, request: User, context: ServicerContext):
+        logging.info("Listando todas as enquetes criadas pelo usuário...")
+
+        with connect_to_database() as cursor:
+            select_polls = """
+            SELECT id_poll, title, text
+            FROM polls
+            where id_creator = %s
+            """
+
+            cursor.execute(select_polls, (request.id,))
+            poll_list = cursor.fetchall()
+
+            if poll_list == []:
+                return polls_pb2.GetPollsReply(polls=[])
+
+            select_options = """ 
+            SELECT id_option, text
+            FROM option
+            WHERE id_poll = %s
+            """
+
+            options = {}
+
+            ids = [poll[0] for poll in poll_list]
+            for id in ids:
+                cursor.execute(select_options, (id,))
+                options[id] = cursor.fetchall()
+
+            returned_polls = [
+                polls_pb2.Poll(
+                    id=poll[0], 
+                    title=poll[1], 
+                    text=poll[2], 
+                    options=[
+                        polls_pb2.PollOptions(
+                            id=options[poll[0]][i][0], 
+                            text=options[poll[0]][i][1]
+                        ) 
+                        for i in range(len(options[poll[0]]))
+                    ]
                 )
                 for poll in poll_list
             ]
@@ -114,7 +162,9 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             """
             cursor.execute(insert_vote, (request.id_user, request.id_option))
 
-        logging.info(f"{request.user.name} votou na opção {request.option}!")
+        logging.info(f"{request.id_user} votou na opção {request.id_option}!")
+
+        return Empty()
 
     def Unvote(self, request: polls_pb2.VoteInfo, context: ServicerContext):
         logging.info("Removendo o voto...")
@@ -130,6 +180,42 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             f"Removido o voto de {request.user.name} na opção {request.option}!"
         )
 
+    def GetPollID(self, request: polls_pb2.Poll, context: ServicerContext):
+        logging.info("Retornando ID da enquete...")
+
+        with connect_to_database() as cursor:
+            select_poll = """
+            SELECT id_poll, title, text
+            FROM polls
+            WHERE id_poll = %s
+            """
+            cursor.execute(select_poll, (request.id,))
+            poll = cursor.fetchone()
+            logging.info(f"{poll=}")
+
+            select_options = """ 
+            SELECT id_option, text
+            FROM option
+            WHERE id_poll = %s
+            """
+
+            cursor.execute(select_options, (poll[0],))
+            options = cursor.fetchall()
+
+            poll = polls_pb2.Poll(
+                    id=poll[0], 
+                    title=poll[1], 
+                    text=poll[2], 
+                    options=[
+                        polls_pb2.PollOptions(
+                            id=options[i][0], 
+                            text=options[i][1]
+                        ) 
+                        for i in range(len(options[poll[0]]))
+                    ]
+                )
+
+            return poll
 
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
