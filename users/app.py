@@ -51,6 +51,11 @@ class UserServicer(users_pb2_grpc.UsersServicer):
             try:
                 token = jose.jwt.decode(credentials.access_token.token, PUBLIC_KEY)
                 result = time() < token["exp"]
+                if not result:
+                    logging.info("Token expirado")
+                else:
+                    logging.info("Token válido")
+                    return
             except Exception:
                 logging.error("Assinatura inválida")
 
@@ -130,7 +135,8 @@ class UserServicer(users_pb2_grpc.UsersServicer):
         if request.username_password.username:
             email = request.username_password.username
         else:
-            email = jose.jwt.decode(request.access_token.token)
+            email = jose.jwt.decode(request.access_token.token, PUBLIC_KEY)["sub"]
+        logging.info("Autenticando %s", email)
         with connect_to_database() as cursor:
             cursor.execute(
                 "SELECT id_user, name, email FROM users WHERE email=%s", (email,)
@@ -140,7 +146,7 @@ class UserServicer(users_pb2_grpc.UsersServicer):
                 context.abort_with_status(
                     rpc_status.to_status(status_pb2.Status(code=code_pb2.NOT_FOUND))
                 )
-            id, name, email = cursor.fetchone()[0]
+            id, name, email = usr
             return users_pb2.User(name=name, email=email, id=id)
 
     def GetToken(

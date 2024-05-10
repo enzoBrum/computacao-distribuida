@@ -25,11 +25,18 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
 
         with connect_to_database() as cursor:
             insert_poll = """
-            INSERT INTO polls (tittle, text, creator_id)
-            values (%s, %s, %s)
+            INSERT INTO polls (title, text, id_creator)
+            values (%s, %s, %s) RETURNING id_poll;
             """
             cursor.execute(
                 insert_poll, (request.poll.title, request.poll.text, request.user.id)
+            )
+
+            id_poll = cursor.fetchone()[0]
+
+            cursor.executemany(
+                "INSERT INTO option (text, id_poll) VALUES (%s, %s)",
+                [(opt.text, id_poll) for opt in request.poll.options],
             )
 
     def DeletePoll(self, request: polls_pb2.PollRequest, context: ServicerContext):
@@ -142,4 +149,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

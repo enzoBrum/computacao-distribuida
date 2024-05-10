@@ -1,4 +1,5 @@
 import base64
+from functools import wraps
 import grp
 import json
 import logging
@@ -6,13 +7,16 @@ import os
 import sys
 
 from flask import Flask, redirect, render_template, request, session
+from flask import g
 from google.rpc import code_pb2, status_pb2
 import grpc
 from grpc_status import rpc_status
 
-from polls_pb2 import Poll, PollRequest, VoteInfo
+from polls_pb2 import Poll, PollOptions, PollRequest, VoteInfo
+import polls_pb2
+import polls_pb2_grpc
 from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword
-import users_pb2_grpc  # type: ignore
+import users_pb2_grpc
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -34,6 +38,46 @@ def get_info_from_token(token: str, info: str, default: any = None) -> str:
 
     token_json: dict[str, any] = json.loads(base64.b64decode(token_padded).decode())
     return token_json.get(info, default)
+
+
+def authenticate(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        token = session.get("token") or request.headers.get("Authorization", "")[7:]
+        if not token:
+            redirect("/login")
+
+        with grpc.insecure_channel(USERS_URL) as channel:
+            stub = users_pb2_grpc.UsersStub(channel)
+
+            try:
+                user = stub.Auth(Credentials(access_token=AccessToken(token=token)))
+
+                g.user = user
+            except grpc.RpcError as err:
+                logger.error("Erro durante autenticação", exc_info=True)
+                status: status_pb2.Status = rpc_status.from_call(err)
+
+                if status.code == code_pb2.NOT_FOUND:
+                    return render_template(
+                        "index.html", error=True, error_msg="User not found"
+                    )
+                elif status.code == code_pb2.UNAUTHENTICATED:
+                    return render_template(
+                        "index.html", error=True, error_msg="User credentials are wrong"
+                    )
+                return render_template(
+                    "index.html", error=True, error_msg="Unknown error."
+                )
+            except Exception as err:
+                logger.error("Erro durante autenticação", exc_info=True)
+                return render_template(
+                    "index.html", error=True, error_msg="Unknown error."
+                )
+            else:
+                return func(*args, **kwargs)
+
+    return wrapper
 
 
 @app.route("/")
@@ -101,6 +145,7 @@ def logout():
 
 
 @app.route("/delete", methods=["DELETE"])
+@authenticate
 def delete():
     """
     Rota de para deleção de usuário.
@@ -163,35 +208,62 @@ def log_in():
             )
 
 
+@app.route("/token", methods=["POST"])
+def get_token():
+    email, password = request.form.get("email"), request.form.get("password")
+
+    if email is None or password is None:
+        return "Email or Password not provided", 400
+
+    with grpc.insecure_channel(USERS_URL) as channel:
+        stub = users_pb2_grpc.UsersStub(channel)
+        try:
+            access_token: AccessToken = stub.GetToken(
+                UsernamePassword(username=email, password=password)
+            )
+            return access_token.token, 200
+        except grpc.RpcError as err:
+            logger.error("Erro durante a obtenção do token", exc_info=True)
+            status = rpc_status.from_call(err)
+
+            if status.code == code_pb2.UNAUTHENTICATED:
+                return "invalid email or password", 401
+
+            return "", 500
+
+
 @app.route("/poll/create", methods=["GET", "POST"])
+@authenticate
 def create_poll():
     """
     Rota de criação de enquete.
     """
 
-    if "user_token" in session:
-        token = session["user_token"]
-    else:
-        return redirect("/login")
-
-    """with grpc.insecure_channel(USERS_URL) as channel:
-        stub = users_pb2_grpc.UsersStub(channel)
-        user = stub.Authenticate(Credentials(token=token))"""
-
     title = request.form.get("title")
-    text = request.form.get("options")
+    text = request.form.get("content")
+    options = request.form.get("options")
 
-    if not title or not text:
+    if not title or not text or not options:
         return render_template("createpoll.html")
 
-    with grpc.insecure_channel(POLLS_URL) as channel:
-        stub = users_pb2_grpc.PollsStub(channel)
-        stub.CreatePoll(PollRequest(poll=Poll(title=title, text=text), user=user))
+    options = options.split(";")
 
-    return "", 200
+    logging.debug(f"Criando enquete. {title=}, {text=}, {options=}")
+
+    with grpc.insecure_channel(POLLS_URL) as channel:
+        stub = polls_pb2_grpc.PollsStub(channel)
+
+        poll = Poll(
+            title=title, text=text, options=[PollOptions(text=opt) for opt in options]
+        )
+
+        stub.CreatePoll(PollRequest(poll=poll, user=g.user))
+
+    return redirect("/index")
 
 
 @app.route("/poll/delete/<int:id>", methods=["POST"])
+@authenticate
 def delete_poll(id: int):
     """
     Rota de deleção de enquete.
@@ -211,6 +283,7 @@ def delete_poll(id: int):
 
 
 @app.route("/poll/user/<int:id>", methods=["GET"])
+@authenticate
 def get_user_polls(id: int):
     """
     Rota para obter enquetes de um usuário.
@@ -224,6 +297,7 @@ def get_user_polls(id: int):
 
 
 @app.route("/poll/vote/<int:id>", methods=["POST"])
+@authenticate
 def vote(id: int):
     """
     Rota para votar em uma enquete.
