@@ -2,34 +2,43 @@
 
 ## TODO
 
-Esse é um TODO beeeeeeem inicial, só pra gente ter o esqueleto do trabalho. Depois que fizermos
-tudo isso, vai ser fácil implementar identidade federada e front-end com HTML.
-Veja o .proto para mais detalhes de cada rota.
-
 OBS: à menos que você muda alguma das dependências em requirements.txt, não é necessário reiniciar os containers quando alguma mudança nos arquivos é realizada. Basta salvar o arquivo que
 o serviço reinicia sozinho
 
-### Compose
+### Padrões de projeto
 
-- [ ] achar uma forma de não ter que usar voluma pra montar o /protos
+- [ ] Identidade Federada.
+- [ ] Replicação
+- [x] Microserviços
+
+### Tecnologias Distribuídas
+
+- [x] RPC
+
+### Front-end
+
+- [ ] Mostrar enquetes na interface.
+- [ ] Votar e desvotar a enquete. (Só quando ta logado.)
+- [ ] Apagar enquete.
+- [ ] Ver enqutes de usuário específico.
 
 ### Users
 
 Por enquanto, não há necessidade de implementar identidade federada e hashing na senha do usuário.
 
-- [ ] Criação/Deleção de usuário (Create e Delete)
+- [x] Criação/Deleção de usuário (Create e Delete)
   - Além do RPC, crie a rota `/signin` no front-end.
-- [ ] Autenticação de usuário (Auth)
+- [x] Autenticação de usuário (Auth)
   - Crie a rota `/login` e a rota `/logout` no front-end e o RPC
-- [ ] Obtenção de informações do usuário (GetInformation)
-  - Por enquanto só o email
 
 ### Polls
 
 OBS: Se as tabelas relacionadas à enquetes possuirem chaves estrangeiras pra tabela de usuários, vai ser necessário garantir que o serviço `users` inicia antes de `polls`
 
-- [ ] Criação de uma enquete (CreatePoll)
+- [x] Criação de uma enquete (CreatePoll)
+
   - Rota `/poll/create` no front-end e RPC
+
 - [ ] Deleção de uma enquete (DeletePoll)
   - Rota `/poll/delete/<id>` no front-end e RPC
 - [ ] Obtenção de todas as enquetes presentes na base de dados. (GetPolls)
@@ -40,27 +49,6 @@ OBS: Se as tabelas relacionadas à enquetes possuirem chaves estrangeiras pra ta
   - Rota `/poll/vote/<id>` e RPC
 - [ ] Remover o voto de uma enquete (Unvote)
   - Rota `/poll/unvote/<id>` e RPC
-
-#### Testando o programa
-
-Para testar a API, basta usar um comando semelhante à
-
-```bash
-
-# Pega todas as enquetes
-curl localhost:5000/poll/all
-
-# Cria um usuário.
-curl localhost:5000/login -F name="Foo Bar" -F email=foo.bar@example.com -F password=1234
-
-# pega o token de acesso
-curl localhost:5000/signin -F name="Foo Bar" -F email=foo.bar@example.com -F password=1234
-
-# usa o token de acesso. (Ainda n ta funcionando o delete)
-curl localhost:5000/delete -H "Authorization: Bearer $token_do_curl_acima" -X DELETE
-```
-
-Eu implementei parte da criação de conta. Então da pra se basear naquilo quando for implementar a API e a comunicação com RPC.
 
 ## Tema:
 
@@ -74,7 +62,7 @@ Eu implementei parte da criação de conta. Então da pra se basear naquilo quan
 
 ## Tecnologias distribuidas
 
-- A definir
+- RPC
 
 ## Funcionalidades
 
