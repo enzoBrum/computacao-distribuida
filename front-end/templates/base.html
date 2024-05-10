@@ -1,45 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Online Voting</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='checkbox.png') }}" type="image/x-icon">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='checkbox.png') }}"
+      type="image/x-icon"
+    />
+
+    {% if error %}
+    <script async>
+      document.addEventListener("DOMContentLoaded", function () {
+        alert("{{ error_msg }}");
+      });
+    </script>
+    {% endif %}
   </head>
   <body>
-        <div id="left-menu" class="left-menu" style="display: none;">
-            <a class="menu-link" href="#">Perfil</a>
-            <a class="menu-link" href="/poll/create">Criar enquete</a>
-            <a class="menu-link" href="#">Deletar enquete</a>
-        </div>
-        <div class="rectangle">
-            <div id="options" class="options">
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <h1 class="title">Online Voting</h1>
-            <div class="login">
-                <a class="link" href="/login">Login</a>
-                <text style="margin: 0px 10px 0px 10px;">|</text>
-                <a class="link" href="/signup">Sign up</a>
-            </div>
-        </div>
-        <script>
-            document.getElementById('options').addEventListener('click', function() {
-                var leftMenu = document.getElementById('left-menu');
-                if (leftMenu.style.display === 'none') {
-                    leftMenu.style.display = 'block';
-                } else {
-                    leftMenu.style.display = 'none';
-                }
-            });
-        </script>
+    <div id="left-menu" class="left-menu" style="display: none">
+      <a class="menu-link" href="#">Perfil</a>
+      <a class="menu-link" href="/poll/create">Criar enquete</a>
+      <a class="menu-link" href="#">Deletar enquete</a>
+    </div>
+    <div class="rectangle">
+      <div id="options" class="options">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <h1 class="title">Online Voting</h1>
 
-        {% block content %}
-        {% endblock %}
+      {% if username is defined %}
+      <div class="login header">
+        <a class="link" href="/logout"> Logout </a>
+      </div>
+      {% else %}
+      <div class="login header">
+        <a class="link" href="/login">Login</a>
+        <text style="margin: 0px 10px 0px 10px">|</text>
+        <a class="link" href="/signup">Sign up</a>
+      </div>
+      {% endif %}
+    </div>
+    <script>
+      document.getElementById("options").addEventListener("click", function () {
+        var leftMenu = document.getElementById("left-menu");
+        if (leftMenu.style.display === "none") {
+          leftMenu.style.display = "block";
+        } else {
+          leftMenu.style.display = "none";
+        }
+      });
+    </script>
 
+    {% block content %} {% endblock %}
   </body>
 </html>

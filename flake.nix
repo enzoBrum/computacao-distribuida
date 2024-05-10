@@ -16,7 +16,6 @@
 
         buildInputs = with pkgs; [
           pythonPackages.python
-          pythonPackages.tkinter
           pythonPackages.pip
           pythonPackages.wheel
           pythonPackages.venvShellHook
@@ -27,7 +26,7 @@
 
         postVenvCreation = /* bash */
           ''
-            pip install -r requirements.txt
+            pip install -r front-end/requirements.txt
           '';
 
         postShellHook = /* bash */

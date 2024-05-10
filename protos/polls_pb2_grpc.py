@@ -32,12 +32,12 @@ class PollsStub(object):
                 )
         self.Vote = channel.unary_unary(
                 '/Polls/Vote',
-                request_serializer=polls__pb2.PollRequest.SerializeToString,
+                request_serializer=polls__pb2.VoteInfo.SerializeToString,
                 response_deserializer=users__pb2.Empty.FromString,
                 )
         self.Unvote = channel.unary_unary(
                 '/Polls/Unvote',
-                request_serializer=polls__pb2.PollRequest.SerializeToString,
+                request_serializer=polls__pb2.VoteInfo.SerializeToString,
                 response_deserializer=users__pb2.Empty.FromString,
                 )
         self.GetPollsVotedByUser = channel.unary_unary(
@@ -124,12 +124,12 @@ def add_PollsServicer_to_server(servicer, server):
             ),
             'Vote': grpc.unary_unary_rpc_method_handler(
                     servicer.Vote,
-                    request_deserializer=polls__pb2.PollRequest.FromString,
+                    request_deserializer=polls__pb2.VoteInfo.FromString,
                     response_serializer=users__pb2.Empty.SerializeToString,
             ),
             'Unvote': grpc.unary_unary_rpc_method_handler(
                     servicer.Unvote,
-                    request_deserializer=polls__pb2.PollRequest.FromString,
+                    request_deserializer=polls__pb2.VoteInfo.FromString,
                     response_serializer=users__pb2.Empty.SerializeToString,
             ),
             'GetPollsVotedByUser': grpc.unary_unary_rpc_method_handler(
@@ -215,7 +215,7 @@ class Polls(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Polls/Vote',
-            polls__pb2.PollRequest.SerializeToString,
+            polls__pb2.VoteInfo.SerializeToString,
             users__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -232,7 +232,7 @@ class Polls(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Polls/Unvote',
-            polls__pb2.PollRequest.SerializeToString,
+            polls__pb2.VoteInfo.SerializeToString,
             users__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

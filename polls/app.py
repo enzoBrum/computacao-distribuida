@@ -1,19 +1,21 @@
 from concurrent import futures
+import logging
 import os
 import sys
+
 import grpc
-import polls_pb2_grpc
-import polls_pb2
-import logging
+from grpc import ServicerContext
 
 from config import connect_to_database
-from grpc import ServicerContext 
-from users_pb2_grpc import UsersStub
+import polls_pb2
+import polls_pb2_grpc
 from users_pb2 import User
+from users_pb2_grpc import UsersStub
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 PORT = os.getenv("PORT")
+
 
 class PollServicer(polls_pb2_grpc.PollsServicer):
 
@@ -26,8 +28,9 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             INSERT INTO polls (tittle, text, creator_id)
             values (%s, %s, %s)
             """
-            cursor.execute(insert_poll, (request.poll.title, request.poll.text, request.user.id))
-        
+            cursor.execute(
+                insert_poll, (request.poll.title, request.poll.text, request.user.id)
+            )
 
     def DeletePoll(self, request: polls_pb2.PollRequest, context: ServicerContext):
         logging.info("Deletando enquete...")
@@ -39,7 +42,6 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             """
             cursor.execute(delete_poll, (request.id, request.user.id))
 
-
     def GetPolls(self, request: polls_pb2.PollRequest, context: ServicerContext):
         logging.info("Listando todas as enquetes...")
 
@@ -48,8 +50,8 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             cursor.execute(query)
             poll_list = cursor.fetchall()
             for i in poll_list:
-                logging.info(i) #?
-        
+                logging.info(i)  # ?
+
     def GetUserPolls(self, request: User, context: ServicerContext):
         logging.info("Listando todas as enquetes criadas pelo usuário...")
 
@@ -75,10 +77,15 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
                 result = cursor.execute(select_options, (id,))
                 options[id] = result.fetchall()
 
-            returned_polls = [polls_pb2.Poll(poll[0], poll[1], poll[2], polls_pb2.PollOptions(options[poll[0]])) for poll in poll_list]
-        
+            returned_polls = [
+                polls_pb2.Poll(
+                    poll[0], poll[1], poll[2], polls_pb2.PollOptions(options[poll[0]])
+                )
+                for poll in poll_list
+            ]
+
         return polls_pb2.GetPollsReply(polls=returned_polls)
-    
+
     def GetPollsVotedByUser(self, request, context):
         with connect_to_database() as cursor:
             query = """SELECT p.* FROM polls p
@@ -88,9 +95,9 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             cursor.execute(query, (request.user.id))
             poll_list = cursor.fetchall()
             for i in poll_list:
-                logging.info(i) #?
+                logging.info(i)  # ?
 
-    def Vote(self, request: polls_pb2.Vote, context: ServicerContext):
+    def Vote(self, request: polls_pb2.VoteInfo, context: ServicerContext):
         logging.info("Votando...")
 
         with connect_to_database() as cursor:
@@ -102,7 +109,7 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
 
         logging.info(f"{request.user.name} votou na opção {request.option}!")
 
-    def Unvote(self, request: polls_pb2.Vote, context: ServicerContext):
+    def Unvote(self, request: polls_pb2.VoteInfo, context: ServicerContext):
         logging.info("Removendo o voto...")
 
         with connect_to_database() as cursor:
@@ -111,8 +118,10 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             WHERE id_user = %s AND id_option = %s
             """
             cursor.execute(delete_vote, (request.id_user, request.id_option))
-        
-        logging.info(f"Removido o voto de {request.user.name} na opção {request.option}!")
+
+        logging.info(
+            f"Removido o voto de {request.user.name} na opção {request.option}!"
+        )
 
 
 def main():
@@ -130,5 +139,7 @@ def main():
         logging.info("Execuçao encerrada")
         exit(0)
 
-if __name__ ==  "__main__":
+
+if __name__ == "__main__":
     main()
+

@@ -1,35 +1,51 @@
+import base64
 import grp
+import json
 import logging
 import os
 import sys
 
-from flask import Flask, request, render_template, redirect, session
-import grpc
-
-from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword
-import users_pb2_grpc
-
-from polls_pb2 import Poll, PollRequest, Vote
-
+from flask import Flask, redirect, render_template, request, session
 from google.rpc import code_pb2, status_pb2
+import grpc
+from grpc_status import rpc_status
 
-# vscode vendo erro onde não tem.
-from grpc_status import rpc_status # type: ignore
+from polls_pb2 import Poll, PollRequest, VoteInfo
+from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword
+import users_pb2_grpc  # type: ignore
 
-logging.basicConfig(stream=sys.stdout)
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 app = Flask(__name__)
+app.secret_key = "a4555ba2625e9496efc5ee371181ed9d5831165c28199bed1d758499cde4f2e6"
+
 
 USERS_URL = os.environ["USERS_URL"]
 POLLS_URL = os.environ["POLLS_URL"]
 
 
-@app.route('/')
-@app.route('/index')
+def get_info_from_token(token: str, info: str, default: any = None) -> str:
+    token = token.split(".")[1]
+    token_padded = (
+        token if len(token) % 4 == 0 else token + "=" * (4 - (len(token) % 4))
+    )
+
+    token_json: dict[str, any] = json.loads(base64.b64decode(token_padded).decode())
+    return token_json.get(info, default)
+
+
+@app.route("/")
+@app.route("/index")
 def index():
-    return render_template('index.html')
+    if session.get("token") is not None:
+        token = session["token"]
+        logger.debug(token)
+        username = get_info_from_token(token, "sub")
+        return render_template("index.html", username=username)
+    else:
+        return render_template("index.html")
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -52,18 +68,37 @@ def sign_up():
         stub = users_pb2_grpc.UsersStub(channel)
 
         user = User(name=name, email=email)
-        cred = Credentials(username_password=UsernamePassword(username=email, password=password))
+        cred = Credentials(
+            username_password=UsernamePassword(username=email, password=password)
+        )
 
         try:
             stub.Create(UserAuth(user=user, credentials=cred))
-            return redirect("/index"), 200
+            access_token: AccessToken = stub.GetToken(
+                UsernamePassword(username=email, password=password)
+            )
+            session["token"] = access_token.token
+            logger.debug(session["token"])
+            return redirect("/index")
         except grpc.RpcError as err:
             logger.error("Erro durante a criação da conta: %s", err)
             status: status_pb2.Status = rpc_status.from_call(err)
 
             if status.code == code_pb2.ALREADY_EXISTS:
-                return f"Usuário com email {email} já existe!", 400
-            return render_template("signup.html"), 500
+                return render_template(
+                    "signup.html",
+                    error=True,
+                    error_msg=f"Usuário com email {email} já existe!",
+                )
+            return render_template("signup.html", error=True, error_msg="unknown error")
+
+
+@app.route("/logout")
+def logout():
+    if session.get("token") is not None:
+        session.clear()
+    return redirect("/index")
+
 
 @app.route("/delete", methods=["DELETE"])
 def delete():
@@ -75,40 +110,58 @@ def delete():
     with grpc.insecure_channel(USERS_URL) as channel:
         stub = users_pb2_grpc.UsersStub(channel)
         try:
-            stub.Delete(Credentials(access_token=AccessToken(access_token=token)))
+            stub.Delete(Credentials(access_token=AccessToken(token=token)))
         except grpc.RpcError as err:
             logger.error("Erro durante a deleção do usuário", exc_info=True)
             status: status_pb2.Status = rpc_status.from_call(err)
 
             if status.code == code_pb2.UNAUTHENTICATED:
                 return "", 401
-            
+
             return "", 500
 
     return "", 200
 
+
 @app.route("/login", methods=["GET", "POST"])
 def log_in():
-    name = request.form.get("name")
+    email = request.form.get("email")
     password = request.form.get("password")
 
-    if not name or not password:
-        return render_template("login.html")
+    if not email or not password:
+        logger.info("Sem email ou senha")
+        return render_template(
+            "login.html",
+        )
 
     with grpc.insecure_channel(USERS_URL) as channel:
         stub = users_pb2_grpc.UsersStub(channel)
         try:
-            token: AccessToken = stub.GetToken(UsernamePassword(username=name, password=password))
-            session["token"] = token.access_token
-            return redirect("/index"), 200
+            access_token: AccessToken = stub.GetToken(
+                UsernamePassword(username=email, password=password)
+            )
+            session["token"] = access_token.token
+            logger.info("Login bem-sucedido")
+            return redirect("/index")
         except grpc.RpcError as err:
             logger.error("Erro durante a obtenção do token", exc_info=True)
             status = rpc_status.from_call(err)
 
             if status.code == code_pb2.UNAUTHENTICATED:
-                return render_template("login.html"), 401
+                return (
+                    render_template(
+                        "login.html",
+                        error=True,
+                        error_msg="invalid email or password",
+                    ),
+                    401,
+                )
 
-            return render_template("login.html"), 500
+            return (
+                render_template("login.html", error=True, error_msg="unknown error"),
+                500,
+            )
+
 
 @app.route("/poll/create", methods=["GET", "POST"])
 def create_poll():
@@ -125,7 +178,6 @@ def create_poll():
         stub = users_pb2_grpc.UsersStub(channel)
         user = stub.Authenticate(Credentials(token=token))"""
 
-
     title = request.form.get("title")
     text = request.form.get("options")
 
@@ -137,6 +189,7 @@ def create_poll():
         stub.CreatePoll(PollRequest(poll=Poll(title=title, text=text), user=user))
 
     return "", 200
+
 
 @app.route("/poll/delete/<int:id>", methods=["POST"])
 def delete_poll(id: int):
@@ -169,6 +222,7 @@ def get_user_polls(id: int):
 
     return polls, 200
 
+
 @app.route("/poll/vote/<int:id>", methods=["POST"])
 def vote(id: int):
     """
@@ -183,10 +237,9 @@ def vote(id: int):
 
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = users_pb2_grpc.PollsStub(channel)
-        stub.Vote(Vote(id_user=user.id, id_option=id))
+        stub.Vote(VoteInfo(id_user=user.id, id_option=id))
 
     return "", 200
-
 
 
 if __name__ == "__main__":

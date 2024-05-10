@@ -6,25 +6,21 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class Vote(_message.Message):
-    __slots__ = ("poll_id", "option_id", "user_id")
-    POLL_ID_FIELD_NUMBER: _ClassVar[int]
-    OPTION_ID_FIELD_NUMBER: _ClassVar[int]
-    USER_ID_FIELD_NUMBER: _ClassVar[int]
-    poll_id: int
-    option_id: int
-    user_id: int
-    def __init__(self, poll_id: _Optional[int] = ..., option_id: _Optional[int] = ..., user_id: _Optional[int] = ...) -> None: ...
+class VoteInfo(_message.Message):
+    __slots__ = ("id_user", "id_option")
+    ID_USER_FIELD_NUMBER: _ClassVar[int]
+    ID_OPTION_FIELD_NUMBER: _ClassVar[int]
+    id_user: int
+    id_option: int
+    def __init__(self, id_user: _Optional[int] = ..., id_option: _Optional[int] = ...) -> None: ...
 
 class PollOptions(_message.Message):
-    __slots__ = ("id", "quantity", "text")
+    __slots__ = ("id", "text")
     ID_FIELD_NUMBER: _ClassVar[int]
-    QUANTITY_FIELD_NUMBER: _ClassVar[int]
     TEXT_FIELD_NUMBER: _ClassVar[int]
     id: int
-    quantity: int
     text: str
-    def __init__(self, id: _Optional[int] = ..., quantity: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
+    def __init__(self, id: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
 
 class Poll(_message.Message):
     __slots__ = ("id", "title", "text", "options")
@@ -40,16 +36,9 @@ class Poll(_message.Message):
 
 class GetPollsReply(_message.Message):
     __slots__ = ("polls",)
-    class PollsEntry(_message.Message):
-        __slots__ = ("key", "value")
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: int
-        value: Poll
-        def __init__(self, key: _Optional[int] = ..., value: _Optional[_Union[Poll, _Mapping]] = ...) -> None: ...
     POLLS_FIELD_NUMBER: _ClassVar[int]
-    polls: _containers.MessageMap[int, Poll]
-    def __init__(self, polls: _Optional[_Mapping[int, Poll]] = ...) -> None: ...
+    polls: _containers.RepeatedCompositeFieldContainer[Poll]
+    def __init__(self, polls: _Optional[_Iterable[_Union[Poll, _Mapping]]] = ...) -> None: ...
 
 class PollRequest(_message.Message):
     __slots__ = ("user", "poll")

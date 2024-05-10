@@ -23,10 +23,10 @@ class UsernamePassword(_message.Message):
     def __init__(self, username: _Optional[str] = ..., password: _Optional[str] = ...) -> None: ...
 
 class AccessToken(_message.Message):
-    __slots__ = ("access_token",)
-    ACCESS_TOKEN_FIELD_NUMBER: _ClassVar[int]
-    access_token: str
-    def __init__(self, access_token: _Optional[str] = ...) -> None: ...
+    __slots__ = ("token",)
+    TOKEN_FIELD_NUMBER: _ClassVar[int]
+    token: str
+    def __init__(self, token: _Optional[str] = ...) -> None: ...
 
 class Credentials(_message.Message):
     __slots__ = ("username_password", "access_token")
