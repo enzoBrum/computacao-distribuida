@@ -211,7 +211,7 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
                             id=options[i][0], 
                             text=options[i][1]
                         ) 
-                        for i in range(len(options[poll[0]]))
+                        for i in range(len(options))
                     ]
                 )
 
