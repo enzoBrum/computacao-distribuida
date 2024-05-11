@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
     {% for poll in polls %}
-    <a href="poll/vote/{{ poll.id }}" class="card-link">
+    <a href="poll/{{ poll.id }}" class="card-link">
         <div class="card">
             <h5 class="card-title">{{ poll.title }}</h5>
         </div>

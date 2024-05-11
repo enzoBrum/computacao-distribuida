@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from flask import Flask, redirect, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, url_for
 from flask import g
 from google.rpc import code_pb2, status_pb2
 import grpc
@@ -17,6 +17,10 @@ import polls_pb2_grpc
 from users_pb2 import AccessToken, Credentials, Empty, User, UserAuth, UsernamePassword
 import users_pb2_grpc
 
+
+USERS_URL = os.getenv("USERS_URL")
+POLLS_URL = os.getenv("POLLS_URL")
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -24,9 +28,6 @@ logger.setLevel(logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = "a4555ba2625e9496efc5ee371181ed9d5831165c28199bed1d758499cde4f2e6"
 
-
-USERS_URL = os.environ["USERS_URL"]
-POLLS_URL = os.environ["POLLS_URL"]
 
 
 def get_info_from_token(token: str, info: str, default: any = None) -> str:
@@ -58,21 +59,13 @@ def authenticate(func):
                 status: status_pb2.Status = rpc_status.from_call(err)
 
                 if status.code == code_pb2.NOT_FOUND:
-                    return render_template(
-                        "index.html", error=True, error_msg="User not found"
-                    )
+                    return redirect("/index?error_msg=User-not-found")
                 elif status.code == code_pb2.UNAUTHENTICATED:
-                    return render_template(
-                        "index.html", error=True, error_msg="User credentials are wrong"
-                    )
-                return render_template(
-                    "index.html", error=True, error_msg="Unknown error."
-                )
+                    return redirect("/index?error_msg=Login-required")
+                return redirect("/index?error_msg=Unknown-error")
             except Exception as err:
                 logger.error("Erro durante autenticação", exc_info=True)
-                return render_template(
-                    "index.html", error=True, error_msg="Unknown error."
-                )
+                return redirect("/index?error_msg=Unknown-error")
             else:
                 return func(*args, **kwargs)
 
@@ -82,6 +75,10 @@ def authenticate(func):
 @app.route("/")
 @app.route("/index")
 def index():
+    error_msg = None
+    if "?error_msg" in request.url:
+        error_msg = request.url.split("?error_msg=")[1]
+
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = polls_pb2_grpc.PollsStub(channel)
 
@@ -93,8 +90,17 @@ def index():
         username = get_info_from_token(token, "sub")
         return render_template("index.html", username=username, polls=polls.polls)
     else:
-        return render_template("index.html", polls=polls.polls)
+        if error_msg is None:
+            return render_template("index.html", polls=polls.polls)
+        else: 
+            return render_template("index.html", polls=polls.polls, error=True, error_msg=error_msg)
 
+
+@app.route("/auth")
+def auth_google():
+    token = oauth.google.authorize_access_token(request)
+    logger.debug(f"TOKEN: {token}")
+    redirect("/index")
 
 @app.route("/signup", methods=["GET", "POST"])
 def sign_up():
@@ -102,11 +108,14 @@ def sign_up():
     Rota de criação de usuário.
     """
 
-    # TODO: identidade federada
-
+    
     name = request.form.get("name")
     email = request.form.get("email")
     password = request.form.get("password")
+    sso = request.form.get("sso")
+
+    if sso is not None:
+        return oauth.google.authorize_redirect(request, url_for("auth"))
 
     if not name or not email or not password:
         return render_template("signup.html")
@@ -298,6 +307,26 @@ def get_user_polls(id: int):
         polls = stub.GetUserPolls(User(id=id))
 
     return polls, 200
+
+
+@app.route("/poll/<int:id>", methods=["GET", "POST"])
+def get_poll(id: int):
+    """
+    Rota para obter uma enquete.
+    """
+
+    with grpc.insecure_channel(POLLS_URL) as channel:
+        stub = polls_pb2_grpc.PollsStub(channel)
+
+        poll: Poll = stub.GetPollID(Poll(id=id))
+
+    if session.get("token") is not None:
+        token = session["token"]
+        logger.debug(token)
+        username = get_info_from_token(token, "sub")
+        return render_template("viewpoll.html", username=username, poll=poll)
+    else:
+        return render_template("viewpoll.html", poll=poll)
 
 
 @app.route("/poll/vote/<int:id>", methods=["GET", "POST"])

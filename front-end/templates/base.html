@@ -25,9 +25,7 @@
   </head>
   <body>
     <div id="left-menu" class="left-menu" style="display: none">
-      <a class="menu-link" href="#">Perfil</a>
       <a class="menu-link" href="/poll/create">Criar enquete</a>
-      <a class="menu-link" href="#">Deletar enquete</a>
     </div>
     <div class="rectangle">
       <div id="options" class="options">
@@ -35,7 +33,9 @@
         <div></div>
         <div></div>
       </div>
-      <h1 class="title">Online Voting</h1>
+      <h1 class="title">
+        <a class="link" href="/index">Online Voting</a>
+      </h1>
 
       {% if username is defined %}
       <div class="login header">
