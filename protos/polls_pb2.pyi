@@ -15,12 +15,14 @@ class VoteInfo(_message.Message):
     def __init__(self, id_user: _Optional[int] = ..., id_option: _Optional[int] = ...) -> None: ...
 
 class PollOptions(_message.Message):
-    __slots__ = ("id", "text")
+    __slots__ = ("id", "text", "votes")
     ID_FIELD_NUMBER: _ClassVar[int]
     TEXT_FIELD_NUMBER: _ClassVar[int]
+    VOTES_FIELD_NUMBER: _ClassVar[int]
     id: int
     text: str
-    def __init__(self, id: _Optional[int] = ..., text: _Optional[str] = ...) -> None: ...
+    votes: int
+    def __init__(self, id: _Optional[int] = ..., text: _Optional[str] = ..., votes: _Optional[int] = ...) -> None: ...
 
 class Poll(_message.Message):
     __slots__ = ("id", "title", "text", "options")

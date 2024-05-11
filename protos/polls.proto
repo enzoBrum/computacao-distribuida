@@ -37,6 +37,7 @@ message VoteInfo {
 message PollOptions {
     optional int32 id = 1;
     string text = 2;
+    optional int32 votes = 3;
 }
 
 message Poll {

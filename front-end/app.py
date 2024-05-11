@@ -12,9 +12,9 @@ from google.rpc import code_pb2, status_pb2
 import grpc
 from grpc_status import rpc_status
 
-from polls_pb2 import Poll, PollOptions, PollRequest, VoteInfo, GetPollsReply
+from polls_pb2 import GetPollsReply, Poll, PollOptions, PollRequest, VoteInfo
 import polls_pb2_grpc
-from users_pb2 import AccessToken, Credentials, User, UserAuth, UsernamePassword, Empty
+from users_pb2 import AccessToken, Credentials, Empty, User, UserAuth, UsernamePassword
 import users_pb2_grpc
 
 logging.basicConfig()
@@ -103,7 +103,6 @@ def sign_up():
     """
 
     # TODO: identidade federada
-    # TODO: usar secure_channel
 
     name = request.form.get("name")
     email = request.form.get("email")

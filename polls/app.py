@@ -9,7 +9,7 @@ from grpc import ServicerContext
 from config import connect_to_database
 import polls_pb2
 import polls_pb2_grpc
-from users_pb2 import User, Empty
+from users_pb2 import Empty, User
 from users_pb2_grpc import UsersStub
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -78,16 +78,15 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
 
             returned_polls = [
                 polls_pb2.Poll(
-                    id=poll[0], 
-                    title=poll[1], 
-                    text=poll[2], 
+                    id=poll[0],
+                    title=poll[1],
+                    text=poll[2],
                     options=[
                         polls_pb2.PollOptions(
-                            id=options[poll[0]][i][0], 
-                            text=options[poll[0]][i][1]
-                        ) 
+                            id=options[poll[0]][i][0], text=options[poll[0]][i][1]
+                        )
                         for i in range(len(options[poll[0]]))
-                    ]
+                    ],
                 )
                 for poll in poll_list
             ]
@@ -125,16 +124,15 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
 
             returned_polls = [
                 polls_pb2.Poll(
-                    id=poll[0], 
-                    title=poll[1], 
-                    text=poll[2], 
+                    id=poll[0],
+                    title=poll[1],
+                    text=poll[2],
                     options=[
                         polls_pb2.PollOptions(
-                            id=options[poll[0]][i][0], 
-                            text=options[poll[0]][i][1]
-                        ) 
+                            id=options[poll[0]][i][0], text=options[poll[0]][i][1]
+                        )
                         for i in range(len(options[poll[0]]))
-                    ]
+                    ],
                 )
                 for poll in poll_list
             ]
@@ -194,28 +192,30 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
             logging.info(f"{poll=}")
 
             select_options = """ 
-            SELECT id_option, text
-            FROM option
-            WHERE id_poll = %s
+            SELECT o.id_option, o.text, COUNT(v.id_option) AS vote_count
+            FROM option o
+            LEFT JOIN vote v
+            ON o.id_poll = %s AND v.id_option = o.id_option
+            GROUP BY o.id_option
             """
 
             cursor.execute(select_options, (poll[0],))
             options = cursor.fetchall()
 
             poll = polls_pb2.Poll(
-                    id=poll[0], 
-                    title=poll[1], 
-                    text=poll[2], 
-                    options=[
-                        polls_pb2.PollOptions(
-                            id=options[i][0], 
-                            text=options[i][1]
-                        ) 
-                        for i in range(len(options))
-                    ]
-                )
+                id=poll[0],
+                title=poll[1],
+                text=poll[2],
+                options=[
+                    polls_pb2.PollOptions(
+                        id=options[i][0], text=options[i][1], votes=options[i][2]
+                    )
+                    for i in range(len(options))
+                ],
+            )
 
             return poll
+
 
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

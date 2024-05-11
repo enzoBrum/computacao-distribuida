@@ -108,9 +108,9 @@ class PollsServicer(object):
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
-    
+
     def GetPollID(self, request, context):
-        """retorna uma enquete pelo id
+        """retorna o poll com id especifico.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -155,9 +155,9 @@ def add_PollsServicer_to_server(servicer, server):
                     response_serializer=polls__pb2.GetPollsReply.SerializeToString,
             ),
             'GetPollID': grpc.unary_unary_rpc_method_handler(
-                        servicer.GetPollID,
-                        request_deserializer=polls__pb2.Poll.FromString,
-                        response_serializer=polls__pb2.Poll.SerializeToString,
+                    servicer.GetPollID,
+                    request_deserializer=polls__pb2.Poll.FromString,
+                    response_serializer=polls__pb2.Poll.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
