@@ -1,10 +1,10 @@
+from contextlib import contextmanager
 import os
 from time import sleep
 from typing import Generator, Iterator
 
 from psycopg2 import connect
 from psycopg2.extensions import cursor
-from contextlib import contextmanager
 
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
@@ -14,7 +14,9 @@ DB_DATABASE = os.getenv("DB_DATABASE")
 
 @contextmanager
 def connect_to_database() -> Iterator[cursor]:
-    with connect(database=DB_DATABASE, user=DB_USER, password=DB_PASSWORD, host=DB_URL) as conn, conn.cursor() as cursor:
+    with connect(
+        database=DB_DATABASE, user=DB_USER, password=DB_PASSWORD, host=DB_URL
+    ) as conn, conn.cursor() as cursor:
         yield cursor
 
 
@@ -40,10 +42,11 @@ def create_db(cursor: cursor):
     CREATE TABLE IF NOT EXISTS vote (
         id_voto SERIAL PRIMARY KEY,
         id_user INT REFERENCES users(id_user) ON DELETE CASCADE,
-        id_option INT REFERENCES option(id_option) ON DELETE CASCADE
+        id_option INT REFERENCES option(id_option) ON DELETE CASCADE,
+        UNIQUE (id_user, id_option)
     );
     """
-    cursor.execute(create_user_table) 
+    cursor.execute(create_user_table)
 
 
 def init_db():

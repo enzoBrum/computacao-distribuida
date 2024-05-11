@@ -85,7 +85,7 @@ def index():
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = polls_pb2_grpc.PollsStub(channel)
 
-        polls : GetPollsReply = stub.GetPolls(Empty())
+        polls: GetPollsReply = stub.GetPolls(Empty())
 
     if session.get("token") is not None:
         token = session["token"]
@@ -300,7 +300,7 @@ def get_user_polls(id: int):
     return polls, 200
 
 
-@app.route("/poll/vote/<int:id>", methods=["GET","POST"])
+@app.route("/poll/vote/<int:id>", methods=["GET", "POST"])
 @authenticate
 def vote(id: int):
     """
@@ -316,18 +316,38 @@ def vote(id: int):
     with grpc.insecure_channel(POLLS_URL) as channel:
         stub = polls_pb2_grpc.PollsStub(channel)
 
-        poll : Poll = stub.GetPollID(Poll(id=id))
-        
+        poll: Poll = stub.GetPollID(Poll(id=id))
+
         for option in poll.options:
             if request.form.get(str(option.id)) is not None:
                 id_options_marked.append(option.id)
-        
+
         if len(id_options_marked) == 0:
             return render_template("vote.html", username=username, poll=poll)
-                                   
-        for id_option in id_options_marked:
-            stub.Vote(VoteInfo(id_user=g.user.id, id_option=id_option))
 
+        already_voted = set()
+        for id_option in id_options_marked:
+            try:
+                stub.Vote(VoteInfo(id_user=g.user.id, id_option=id_option))
+            except grpc.RpcError as err:
+                logger.error("Erro durante o voto %s", id_option, exc_info=True)
+
+                status: status_pb2.Status = rpc_status.from_call(err)
+
+                if status.code == code_pb2.ALREADY_EXISTS:
+                    already_voted.add(id_option)
+                else:
+                    raise err
+
+        if len(already_voted) > 0:
+            option_texts = [opt.text for opt in poll.options if opt.id in already_voted]
+            return render_template(
+                "vote.html",
+                username=username,
+                poll=poll,
+                error=True,
+                error_msg=f"Já votou nas seguintes opções: {','.join(option_texts)}",
+            )
     return redirect("/index")
 
 

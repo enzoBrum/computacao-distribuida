@@ -3,14 +3,18 @@ import logging
 import os
 import sys
 
+from google.rpc import code_pb2, status_pb2
 import grpc
 from grpc import ServicerContext
+from grpc_status import rpc_status
+from psycopg2.errors import UniqueViolation
 
 from config import connect_to_database
 import polls_pb2
 import polls_pb2_grpc
 from users_pb2 import Empty, User
 from users_pb2_grpc import UsersStub
+
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
@@ -153,12 +157,21 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
     def Vote(self, request: polls_pb2.VoteInfo, context: ServicerContext):
         logging.info("Votando...")
 
-        with connect_to_database() as cursor:
-            insert_vote = """
-            INSERT INTO vote (id_user, id_option)
-            VALUES (%s, %s)
-            """
-            cursor.execute(insert_vote, (request.id_user, request.id_option))
+        try:
+            with connect_to_database() as cursor:
+                insert_vote = """
+                INSERT INTO vote (id_user, id_option)
+                VALUES (%s, %s)
+                """
+                cursor.execute(insert_vote, (request.id_user, request.id_option))
+        except UniqueViolation:
+            logging.info(
+                "Usuário %s já votou em %s", request.id_user, request.id_option
+            )
+
+            context.abort_with_status(
+                rpc_status.to_status(status_pb2.Status(code=code_pb2.ALREADY_EXISTS))
+            )
 
         logging.info(f"{request.id_user} votou na opção {request.id_option}!")
 
@@ -193,10 +206,13 @@ class PollServicer(polls_pb2_grpc.PollsServicer):
 
             select_options = """ 
             SELECT o.id_option, o.text, COUNT(v.id_option) AS vote_count
-            FROM option o
-            LEFT JOIN vote v
-            ON o.id_poll = %s AND v.id_option = o.id_option
-            GROUP BY o.id_option
+            FROM (
+                SELECT opt.id_option, opt.text FROM option opt WHERE opt.id_poll = %s
+            ) o
+            LEFT JOIN vote v ON
+            v.id_option = o.id_option
+            GROUP BY o.id_option, o.text
+            ORDER BY o.text
             """
 
             cursor.execute(select_options, (poll[0],))
