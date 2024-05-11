@@ -1,54 +1,11 @@
 # computacao-distribuida
 
-## TODO
+## Executando a aplicação
 
-OBS: à menos que você muda alguma das dependências em requirements.txt, não é necessário reiniciar os containers quando alguma mudança nos arquivos é realizada. Basta salvar o arquivo que
-o serviço reinicia sozinho
+Para executar a aplicação, rode o script `run.sh` na pasta raíz do projeto.
+É necessário que o docker esteja instalado e que a porta 5000 esteja livre.
 
-### Padrões de projeto
-
-- [ ] Identidade Federada.
-- [ ] Replicação
-- [x] Microserviços
-
-### Tecnologias Distribuídas
-
-- [x] RPC
-
-### Front-end
-
-- [ ] Mostrar enquetes na interface.
-- [ ] Votar e desvotar a enquete. (Só quando ta logado.)
-- [ ] Apagar enquete.
-- [ ] Ver enqutes de usuário específico.
-
-### Users
-
-Por enquanto, não há necessidade de implementar identidade federada e hashing na senha do usuário.
-
-- [x] Criação/Deleção de usuário (Create e Delete)
-  - Além do RPC, crie a rota `/signin` no front-end.
-- [x] Autenticação de usuário (Auth)
-  - Crie a rota `/login` e a rota `/logout` no front-end e o RPC
-
-### Polls
-
-OBS: Se as tabelas relacionadas à enquetes possuirem chaves estrangeiras pra tabela de usuários, vai ser necessário garantir que o serviço `users` inicia antes de `polls`
-
-- [x] Criação de uma enquete (CreatePoll)
-
-  - Rota `/poll/create` no front-end e RPC
-
-- [ ] Deleção de uma enquete (DeletePoll)
-  - Rota `/poll/delete/<id>` no front-end e RPC
-- [ ] Obtenção de todas as enquetes presentes na base de dados. (GetPolls)
-  - Rota `/poll/all` no front-end e RPC
-- [ ] Obtenção de todas as enquetes criadas por um usuário (GetUserPolls)
-  - Rota `/poll/user/<id>` no front-end e RPC
-- [ ] Votar em uma enquete (Vote)
-  - Rota `/poll/vote/<id>` e RPC
-- [ ] Remover o voto de uma enquete (Unvote)
-  - Rota `/poll/unvote/<id>` e RPC
+Quando a aplicação já estiver executando, basta acessar `localhost:5000/` no navegador.
 
 ## Tema:
 

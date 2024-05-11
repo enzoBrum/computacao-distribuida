@@ -38,6 +38,8 @@ services:
       - type: bind
         source: ./protos
         target: /protos
+    depends_on:
+      - postgres
 
   users:
     build: ./users
@@ -58,6 +60,8 @@ services:
       - type: bind
         source: ./protos
         target: /protos
+    depends_on:
+      - postgres
 
   postgres:
     image: bitnami/postgresql:16
