@@ -7,9 +7,6 @@ service Users {
     */
     rpc Create(UserAuth) returns (Empty) {}
     
-    // Delete um usuário, o removendo da base de dados. Além disso, deve remover todos os seus votos.
-    rpc Delete(Credentials) returns (Empty) {}
-    
     // autentica um usuário. I.e: fala se há um usuário com email e senha iguais aos recebidos.
     rpc Auth(Credentials) returns (User) {}
 

@@ -10,14 +10,10 @@ service Polls {
     // cria uma enquete
     rpc CreatePoll(PollRequest) returns (Poll) {}
 
-    // delete uma enquete
-    rpc DeletePoll(PollRequest) returns (Empty) {}
     
     // Vota em uma enquete.
     rpc Vote(VoteInfo) returns (Empty) {}
     
-    // remove um voto de uma enquete.
-    rpc Unvote(VoteInfo) returns (Empty) {}
     
     // retorna todas as enquetes nas quais um usuário votou
     rpc GetPollsVotedByUser(User) returns (GetPollsReply) {}

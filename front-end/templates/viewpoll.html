@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="poll-title">{{ poll.title }}</h1>
+    <p class="poll-text">{{ poll.text }}</p>
+        {% for option in poll.options %}
+        <div class="option">
+            <text for="{{ option.id }}">{{ option.text }}: {{ option.votes }} votos</text>
+        </div>
+        {% endfor %}
+        <a href="/poll/vote/{{ poll.id }}" class="submit-button">
+            <text class="vote-text">Votar</text>
+        </a>
+    </form>
+</div>
+{% endblock %}
